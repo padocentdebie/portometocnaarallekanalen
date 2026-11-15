@@ -334,7 +334,7 @@
     async function initMicrophone() {
       if (!micStream) {
         micStream = await navigator.mediaDevices.getUserMedia({
-          audio: { 2105Cancellation: true, noiseSuppression: true, autoGainControl: true }
+          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
         });
       }
     }
