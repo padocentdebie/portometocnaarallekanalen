@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>C2000 Porto – Politieacademie</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <style>
+    .ptt-active { background-color: #dc2626 !important; transform: scale(0.97); }
+    .lcd-screen { background-color: #5c7a52; color: #081406; font-family: 'Courier New', Courier, monospace; }
+    .ptt-btn {
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+
+  <!-- ============================================================
+       INLOGSCHERM
+  ============================================================ -->
+  <div id="view-login" class="min-h-screen flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-2xl max-w-md w-full space-y-6">
+      <div class="text-center space-y-2">
+        <span class="text-xs font-black tracking-widest text-amber-500 uppercase bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
+          C2000 Porto
+        </span>
+        <h1 class="text-2xl font-black text-white">Aanmelden Porto</h1>
+        <p class="text-xs text-slate-400">Kies je klas (kanaal), naam en rol.</p>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">Klas / Kanaal</label>
+          <select id="select-class" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
+            <option value="ALPHA">ALPHA</option>
+            <option value="BRAVO">BRAVO</option>
+            <option value="CHARLIE">CHARLIE</option>
+            <option value="DELTA">DELTA</option>
+            <option value="ECHO">ECHO</option>
+            <option value="FOXTROT">FOXTROT</option>
+            <option value="GOLF">GOLF</option>
+            <option value="HOTEL">HOTEL</option>
+            <option value="JULIETT">JULIETT</option>
+            <option value="KILO">KILO</option>
+            <option value="LIMA">LIMA</option>
+            <option value="MIKE">MIKE</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">Naam / Callsign</label>
+          <input id="input-name" type="text" placeholder="Bijv. Student Jansen"
+                 class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">Rol</label>
+          <select id="select-role" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
+            <option value="TAAKDRAGER">Taakdrager</option>
+            <option value="MEDEWERKER-OC">Medewerker OC</option>
+          </select>
+        </div>
+
+        <button onclick="enterPorto()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl shadow-lg transition tracking-wider">
+          INLOGGEN OP PORTO →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       PORTO SCHERM
+  ============================================================ -->
+  <div id="view-porto" class="hidden min-h-screen flex flex-col">
+    <header class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="h-3 w-3 rounded-full bg-emerald-500 animate-pulse"></div>
+        <div>
+          <h2 class="font-black text-sm" id="topbar-info">KLAS: ALPHA</h2>
+          <p class="text-[11px] text-slate-400" id="topbar-role">Rol: TAAKDRAGER • Student</p>
+        </div>
+      </div>
+      <button onclick="logout()" class="bg-slate-800 hover:bg-slate-700 text-xs font-bold px-3 py-2 rounded-lg transition">
+        Uitloggen
+      </button>
+    </header>
+
+    <main class="flex-1 p-4 lg:p-6 flex items-start justify-center">
+      <div class="w-full max-w-xl space-y-6">
+
+        <!-- PORTO BEHUIZING -->
+        <div class="bg-slate-800 p-5 rounded-3xl border-4 border-slate-700 shadow-2xl w-full space-y-4">
+
+          <!-- LCD -->
+          <div class="lcd-screen p-3 rounded-xl border-2 border-slate-600 flex flex-col justify-between h-24 shadow-inner">
+            <div class="flex justify-between text-xs font-bold">
+              <span id="lcd-channel">CH: ALPHA</span>
+              <span id="lcd-status">● STAND-BY</span>
+            </div>
+            <div id="lcd-title" class="text-center font-bold text-sm tracking-wider uppercase">KANAAL OPEN</div>
+            <div id="lcd-role" class="text-[10px] font-bold">ROL: TAAKDRAGER</div>
+          </div>
+
+          <!-- OC: zend-doel selector -->
+          <div id="oc-target-wrap" class="hidden space-y-1">
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-amber-400">Zend naar (OC)</label>
+            <select id="select-oc-target" class="w-full bg-slate-900 border border-amber-700/60 rounded-lg p-2 text-xs font-bold text-white focus:outline-none focus:border-amber-500">
+              <option value="ALLE">📢 ALLE KLASSEN (broadcast)</option>
+              <option value="ALPHA">ALPHA</option>
+              <option value="BRAVO">BRAVO</option>
+              <option value="CHARLIE">CHARLIE</option>
+              <option value="DELTA">DELTA</option>
+              <option value="ECHO">ECHO</option>
+              <option value="FOXTROT">FOXTROT</option>
+              <option value="GOLF">GOLF</option>
+              <option value="HOTEL">HOTEL</option>
+              <option value="JULIETT">JULIETT</option>
+              <option value="KILO">KILO</option>
+              <option value="LIMA">LIMA</option>
+              <option value="MIKE">MIKE</option>
+            </select>
+          </div>
+
+          <!-- Rol-wissel -->
+          <button onclick="toggleRole()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold p-2.5 rounded-lg text-xs transition">
+            Wissel Rol (Taakdrager / OC)
+          </button>
+
+          <!-- PTT KNOP -->
+          <button id="btn-ptt" class="ptt-btn w-full bg-amber-600 hover:bg-amber-500 text-white font-black py-6 rounded-2xl text-sm uppercase tracking-wider shadow-lg select-none transition">
+            <span id="ptt-label">HOUD INGEDRUKT (PTT)</span>
+          </button>
+        </div>
+
+        <!-- RX LOG -->
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-xl space-y-3">
+          <h3 class="text-xs font-black uppercase tracking-wider text-amber-400">📻 Ontvangen berichten</h3>
+          <div id="rx-log" class="space-y-2 max-h-72 overflow-y-auto text-xs pr-1">
+            <span class="text-slate-600 italic text-[11px]">Nog geen berichten op dit kanaal...</span>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script>
+    /* ============ FIREBASE CONFIG ============ */
+    const firebaseConfig = {
+      apiKey: "AIzaSyBEod8zm1jvvkmPbe6cA_SQo2U_esC9yTY",
+      authDomain: "aangiftebotje.firebaseapp.com",
+      databaseURL: "https://aangiftebotje-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "aangiftebotje",
+      storageBucket: "aangiftebotje.firebasestorage.app",
+      messagingSenderId: "825633841222",
+      appId: "1:825633841222:web:15d93d08e2b719285dea47"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    /* ============ CONSTANTEN ============ */
+    const ALL_CLASSES = ['ALPHA','BRAVO','CHARLIE','DELTA','ECHO','FOXTROT','GOLF','HOTEL','JULIETT','KILO','LIMA','MIKE'];
+    const OC_CHANNEL = 'OC';
+
+    /* ============ STATE ============ */
+    let currentClass = 'ALPHA';
+    let currentRole = 'TAAKDRAGER';
+    let currentName = 'Student';
+
+    const myClientId = 'client_' + Math.random().toString(36).substring(2, 10);
+    const sessionStartTime = Date.now();
+    const processedVoiceKeys = new Set();
+
+    // Listeners + audio-queue
+    let activeRefs = [];
+    let rxQueue = [];
+    let rxBusy = false;
+
+    // Audio state
+    let audioCtx = null;
+    let micStream = null;
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let isRecording = false;
+
+    /* ============ HELPERS ============ */
+    function msgPath(channel) { return `porto/${channel}/messages`; }
+
+    function channelLabel(ch) {
+      if (!ch) return '?';
+      if (ch === OC_CHANNEL || ch === 'ALLE') return 'ALLE KLASSEN';
+      return ch;
+    }
+
+    function getListenPlan() {
+      if (currentRole === 'MEDEWERKER-OC') {
+        const plan = ALL_CLASSES.map(c => ({ channel: c, path: msgPath(c) }));
+        plan.push({ channel: OC_CHANNEL, path: msgPath(OC_CHANNEL) });
+        return plan;
+      }
+      return [
+        { channel: currentClass, path: msgPath(currentClass) },
+        { channel: OC_CHANNEL, path: msgPath(OC_CHANNEL) }
+      ];
+    }
+
+    function getSendChannel() {
+      if (currentRole === 'MEDEWERKER-OC') {
+        const sel = document.getElementById('select-oc-target');
+        const v = sel ? sel.value : 'ALLE';
+        return v === 'ALLE' ? OC_CHANNEL : v;
+      }
+      return currentClass;
+    }
+
+    /* ============ LOGIN / LOGOUT ============ */
+    function enterPorto() {
+      currentClass = document.getElementById('select-class').value;
+      currentName = (document.getElementById('input-name').value || '').trim() || 'Student';
+      currentRole = document.getElementById('select-role').value;
+
+      // Audio ontgrendelen op user-gesture
+      getAudioContext();
+
+      document.getElementById('topbar-info').textContent = `KLAS: ${currentClass}`;
+      document.getElementById('topbar-role').textContent = `Rol: ${currentRole} • ${currentName}`;
+
+      updateRoleUI();
+
+      document.getElementById('view-login').classList.add('hidden');
+      document.getElementById('view-porto').classList.remove('hidden');
+
+      processedVoiceKeys.clear();
+      listenForIncomingRadio();
+    }
+
+    function logout() {
+      detachListeners();
+      stopMicStream();
+      rxQueue = [];
+      document.getElementById('view-porto').classList.add('hidden');
+      document.getElementById('view-login').classList.remove('hidden');
+      document.getElementById('rx-log').innerHTML =
+        '<span class="text-slate-600 italic text-[11px]">Nog geen berichten op dit kanaal...</span>';
+    }
+
+    function toggleRole() {
+      currentRole = (currentRole === 'TAAKDRAGER') ? 'MEDEWERKER-OC' : 'TAAKDRAGER';
+      document.getElementById('topbar-role').textContent = `Rol: ${currentRole} • ${currentName}`;
+      updateRoleUI();
+      playRadioChirp();
+      listenForIncomingRadio();
+    }
+
+    function updateRoleUI() {
+      const ocWrap = document.getElementById('oc-target-wrap');
+      if (currentRole === 'MEDEWERKER-OC') {
+        ocWrap.classList.remove('hidden');
+      } else {
+        ocWrap.classList.add('hidden');
+      }
+      updateLCDIdle();
+    }
+
+    function updateLCDIdle() {
+      const chEl = document.getElementById('lcd-channel');
+      if (currentRole === 'MEDEWERKER-OC') {
+        const target = getSendChannel();
+        chEl.textContent = target === OC_CHANNEL
+          ? `CH: OC — ALLE`
+          : `CH: OC → ${target}`;
+      } else {
+        chEl.textContent = `CH: ${currentClass}`;
+      }
+      document.getElementById('lcd-role').textContent = `ROL: ${currentRole}`;
+      document.getElementById('lcd-status').textContent = "● STAND-BY";
+      document.getElementById('lcd-title').textContent = "KANAAL OPEN";
+    }
+
+    /* ============ AUDIO-ENGINE ============ */
+    function getAudioContext() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    }
+
+    function playRadioChirp() {
+      try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(920, now);
+        osc.frequency.setValueAtTime(1250, now + 0.08);
+        gain.gain.setValueAtTime(0.18, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.18);
+      } catch (e) { /* stil falen */ }
+    }
+
+    function playSquelchNoise() {
+      try {
+        const ctx = getAudioContext();
+        const duration = 0.11;
+        const bufferSize = ctx.sampleRate * duration;
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = 1400;
+        filter.Q.value = 2;
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.12, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        noise.start();
+      } catch (e) { /* stil falen */ }
+    }
+
+    async function initMicrophone() {
+      if (!micStream) {
+        micStream = await navigator.mediaDevices.getUserMedia({
+          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+        });
+      }
+    }
+
+    function stopMicStream() {
+      if (micStream) {
+        micStream.getTracks().forEach(t => t.stop());
+        micStream = null;
+      }
+    }
+
+    /* ============ ZENDEN (PTT) ============ */
+    async function startVoiceRecording(e) {
+      if (e) e.preventDefault();
+      if (isRecording) return;
+
+      try {
+        await initMicrophone();
+      } catch (err) {
+        alert("Microfoon geblokkeerd of niet beschikbaar: " + err.message);
+        return;
+      }
+
+      isRecording = true;
+      audioChunks = [];
+
+      document.getElementById('btn-ptt').classList.add('ptt-active');
+      document.getElementById('ptt-label').textContent = "● SPREEK NU...";
+      document.getElementById('lcd-status').textContent = "● TX (ZENDEN)";
+
+      const sendChannel = getSendChannel();
+      document.getElementById('lcd-title').textContent =
+        `TX → ${channelLabel(sendChannel)}`;
+
+      playRadioChirp();
+
+      // Beste mimeType per browser
+      let mimeType = 'audio/webm';
+      if (MediaRecorder.isTypeSupported('audio/mp4')) {
+        mimeType = 'audio/mp4';
+      } else if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+        mimeType = 'audio/webm;codecs=opus';
+      }
+
+      try {
+        mediaRecorder = new MediaRecorder(micStream, { mimeType });
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data && event.data.size > 0) audioChunks.push(event.data);
+        };
+        mediaRecorder.onstop = uploadVoicePayload;
+        mediaRecorder.start(100);
+      } catch (err) {
+        console.error("MediaRecorder fout:", err);
+        isRecording = false;
+      }
+    }
+
+    function stopVoiceRecording(e) {
+      if (e) e.preventDefault();
+      if (!isRecording) return;
+      isRecording = false;
+
+      document.getElementById('btn-ptt').classList.remove('ptt-active');
+      document.getElementById('ptt-label').textContent = "HOUD INGEDRUKT (PTT)";
+      document.getElementById('lcd-status').textContent = "● STAND-BY";
+      document.getElementById('lcd-title').textContent = "KANAAL OPEN";
+
+      playSquelchNoise();
+
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        try {
+          mediaRecorder.requestData();
+          mediaRecorder.stop();
+        } catch (err) {
+          console.error("Stop error:", err);
+        }
+      }
+    }
+
+    function uploadVoicePayload() {
+      if (audioChunks.length === 0) return;
+      const mimeType = mediaRecorder ? mediaRecorder.mimeType : 'audio/webm';
+      const blob = new Blob(audioChunks, { type: mimeType });
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
+      reader.onloadend = () => {
+        const sendChannel = getSendChannel();
+        const channelField = (sendChannel === OC_CHANNEL) ? 'ALLE' : sendChannel;
+        db.ref(msgPath(sendChannel)).push({
+          audio: reader.result,
+          senderId: myClientId,
+          senderName: currentName,
+          senderRole: currentRole,
+          channel: channelField,
+          targetChannel: sendChannel,
+          timestamp: Date.now()
+        }).catch(err => console.error("Porto verzendfout:", err));
+      };
+    }
+
+    /* ============ ONTVANGEN ============ */
+    function detachListeners() {
+      activeRefs.forEach(ref => {
+        try { ref.off(); } catch (e) {}
+      });
+      activeRefs = [];
+    }
+
+    function listenForIncomingRadio() {
+      detachListeners();
+
+      const plan = getListenPlan();
+      plan.forEach(({ channel, path }) => {
+        const ref = db.ref(path);
+        ref.limitToLast(20).on('child_added', snap => {
+          const key = snap.key;
+          const data = snap.val();
+          if (!data) return;
+
+          const uid = `${path}::${key}`;
+          if (processedVoiceKeys.has(uid)) return;
+          processedVoiceKeys.add(uid);
+
+          const msgChannel = data.channel || channel;
+
+          // Altijd in RX-log tonen
+          addToLog({ ...data, channel: msgChannel }, key, path);
+
+          // Alleen auto-playen als het van iemand anders is én recent
+          if (data.senderId === myClientId) return;
+          if (!data.timestamp || data.timestamp < sessionStartTime) return;
+
+          queueIncoming(data, msgChannel);
+        });
+        activeRefs.push(ref);
+      });
+    }
+
+    /* Audio-queue: voorkomt overlappende berichten (zeker bij OC met 12 klassen) */
+    function queueIncoming(data, channel) {
+      rxQueue.push({ data, channel });
+      drainRxQueue();
+    }
+
+    async function drainRxQueue() {
+      if (rxBusy) return;
+      rxBusy = true;
+      while (rxQueue.length > 0) {
+        const item = rxQueue.shift();
+        await playIncomingAudio(item.data, item.channel);
+      }
+      rxBusy = false;
+    }
+
+    function playIncomingAudio(data, channel) {
+      return new Promise(resolve => {
+        playRadioChirp();
+        const statusEl = document.getElementById('lcd-status');
+        const titleEl = document.getElementById('lcd-title');
+        statusEl.textContent = "● RX (SPRAAK)";
+        titleEl.textContent = `RX ${data.senderName || '?'} • ${channelLabel(channel)}`;
+
+        const audio = new Audio(data.audio);
+        let finished = false;
+        const finish = () => {
+          if (finished) return;
+          finished = true;
+          playSquelchNoise();
+          statusEl.textContent = "● STAND-BY";
+          titleEl.textContent = "KANAAL OPEN";
+          resolve();
+        };
+
+        audio.onended = finish;
+        audio.onerror = finish;
+
+        audio.play().catch(e => {
+          console.log("Autoplay geblokkeerd:", e);
+          finish();
+        });
+      });
+    }
+
+    function addToLog(data, key, path) {
+      const container = document.getElementById('rx-log');
+      if (container.querySelector('.italic')) container.innerHTML = '';
+
+      const time = data.timestamp ? new Date(data.timestamp) : new Date();
+      const timeStr = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const isOwn = data.senderId === myClientId;
+      const chLabel = channelLabel(data.channel);
+
+      const div = document.createElement('div');
+      div.className = `p-3 rounded-xl border ${isOwn
+        ? 'bg-blue-950/40 border-blue-800/60'
+        : 'bg-slate-950 border-slate-800'} flex items-center justify-between gap-2`;
+
+      div.innerHTML = `
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-0.5 flex-wrap">
+            <span class="text-[10px] font-black px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 uppercase tracking-wider">${escapeHtml(chLabel)}</span>
+            <span class="text-[10px] font-bold ${isOwn ? 'text-blue-400' : 'text-slate-200'} uppercase">${escapeHtml(data.senderName || 'Onbekend')}</span>
+            <span class="text-[10px] text-slate-500 font-mono">${escapeHtml(data.senderRole || '')}</span>
+          </div>
+          <p class="text-[10px] text-slate-500">${timeStr}${isOwn ? ' • Jij' : ''}</p>
+        </div>
+        <button data-path="${escapeHtml(path)}" data-key="${escapeHtml(key)}" class="replay-btn bg-slate-800 hover:bg-slate-700 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition shrink-0">
+          ▶ Speel
+        </button>
+      `;
+      container.prepend(div);
+
+      div.querySelector('.replay-btn').addEventListener('click', (ev) => {
+        replayAudio(ev.currentTarget.dataset.path, ev.currentTarget.dataset.key);
+      });
+    }
+
+    function replayAudio(path, key) {
+      db.ref(path).child(key).once('value').then(snap => {
+        const data = snap.val();
+        if (data && data.audio) {
+          queueIncoming(data, data.channel || '?');
+        }
+      });
+    }
+
+    /* ============ PTT EVENT HOOKS ============ */
+    const pttBtn = document.getElementById('btn-ptt');
+    pttBtn.addEventListener('pointerdown', startVoiceRecording);
+    pttBtn.addEventListener('pointerup', stopVoiceRecording);
+    pttBtn.addEventListener('pointercancel', stopVoiceRecording);
+    pttBtn.addEventListener('pointerleave', stopVoiceRecording);
+
+    /* ============ OC DOEL-SELECTOR ============ */
+    document.getElementById('select-oc-target').addEventListener('change', () => {
+      if (currentRole === 'MEDEWERKER-OC') updateLCDIdle();
+    });
+
+    /* ============ UTILS ============ */
+    function escapeHtml(text) {
+      if (!text) return '';
+      return String(text)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
+</body>
+</html>
