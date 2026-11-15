@@ -37,18 +37,18 @@
         <div>
           <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">Klas / Kanaal</label>
           <select id="select-class" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
-            <option value="ALPHA">ALPHA</option>
-            <option value="BRAVO">BRAVO</option>
-            <option value="CHARLIE">CHARLIE</option>
-            <option value="DELTA">DELTA</option>
-            <option value="ECHO">ECHO</option>
-            <option value="FOXTROT">FOXTROT</option>
-            <option value="GOLF">GOLF</option>
-            <option value="HOTEL">HOTEL</option>
-            <option value="JULIETT">JULIETT</option>
-            <option value="KILO">KILO</option>
-            <option value="LIMA">LIMA</option>
-            <option value="MIKE">MIKE</option>
+            <option value="2101">2101</option>
+            <option value="2102">2102</option>
+            <option value="2103">2103</option>
+            <option value="2104">2104</option>
+            <option value="2105">2105</option>
+            <option value="2106">2106</option>
+            <option value="2107">2107</option>
+            <option value="2108">2108</option>
+            <option value="2109">2109</option>
+            <option value="2110">2110</option>
+            <option value="2111">2111</option>
+            <option value="2112">2112</option>
           </select>
         </div>
 
@@ -81,7 +81,7 @@
       <div class="flex items-center gap-3">
         <div class="h-3 w-3 rounded-full bg-emerald-500 animate-pulse"></div>
         <div>
-          <h2 class="font-black text-sm" id="topbar-info">KLAS: ALPHA</h2>
+          <h2 class="font-black text-sm" id="topbar-info">KLAS: 2101</h2>
           <p class="text-[11px] text-slate-400" id="topbar-role">Rol: TAAKDRAGER • Student</p>
         </div>
       </div>
@@ -99,7 +99,7 @@
           <!-- LCD -->
           <div class="lcd-screen p-3 rounded-xl border-2 border-slate-600 flex flex-col justify-between h-24 shadow-inner">
             <div class="flex justify-between text-xs font-bold">
-              <span id="lcd-channel">CH: ALPHA</span>
+              <span id="lcd-channel">CH: 2101</span>
               <span id="lcd-status">● STAND-BY</span>
             </div>
             <div id="lcd-title" class="text-center font-bold text-sm tracking-wider uppercase">KANAAL OPEN</div>
@@ -111,18 +111,18 @@
             <label class="block text-[10px] font-bold uppercase tracking-wider text-amber-400">Zend naar (OC)</label>
             <select id="select-oc-target" class="w-full bg-slate-900 border border-amber-700/60 rounded-lg p-2 text-xs font-bold text-white focus:outline-none focus:border-amber-500">
               <option value="ALLE">📢 ALLE KLASSEN (broadcast)</option>
-              <option value="ALPHA">ALPHA</option>
-              <option value="BRAVO">BRAVO</option>
-              <option value="CHARLIE">CHARLIE</option>
-              <option value="DELTA">DELTA</option>
-              <option value="ECHO">ECHO</option>
-              <option value="FOXTROT">FOXTROT</option>
-              <option value="GOLF">GOLF</option>
-              <option value="HOTEL">HOTEL</option>
-              <option value="JULIETT">JULIETT</option>
-              <option value="KILO">KILO</option>
-              <option value="LIMA">LIMA</option>
-              <option value="MIKE">MIKE</option>
+              <option value="2101">2101</option>
+              <option value="2102">2102</option>
+              <option value="2103">2103</option>
+              <option value="2104">2104</option>
+              <option value="2105">2105</option>
+              <option value="2106">2106</option>
+              <option value="2107">2107</option>
+              <option value="2108">2108</option>
+              <option value="2109">2109</option>
+              <option value="2110">2110</option>
+              <option value="2111">2111</option>
+              <option value="2112">2112</option>
             </select>
           </div>
 
@@ -164,11 +164,11 @@
     const db = firebase.database();
 
     /* ============ CONSTANTEN ============ */
-    const ALL_CLASSES = ['ALPHA','BRAVO','CHARLIE','DELTA','ECHO','FOXTROT','GOLF','HOTEL','JULIETT','KILO','LIMA','MIKE'];
+    const ALL_CLASSES = ['2101','2102','2103','2104','2105','2106','2107','2108','2109','2110','2111','2112'];
     const OC_CHANNEL = 'OC';
 
     /* ============ STATE ============ */
-    let currentClass = 'ALPHA';
+    let currentClass = '2101';
     let currentRole = 'TAAKDRAGER';
     let currentName = 'Student';
 
@@ -334,7 +334,7 @@
     async function initMicrophone() {
       if (!micStream) {
         micStream = await navigator.mediaDevices.getUserMedia({
-          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+          audio: { 2105Cancellation: true, noiseSuppression: true, autoGainControl: true }
         });
       }
     }
