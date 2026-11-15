@@ -30,12 +30,12 @@
           C2000 Porto
         </span>
         <h1 class="text-2xl font-black text-white">Aanmelden Porto</h1>
-        <p class="text-xs text-slate-400">Kies je klas (kanaal), naam en rol.</p>
+        <p class="text-xs text-slate-400">Kies jouw kanaal, naam en rol.</p>
       </div>
 
       <div class="space-y-4">
         <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">Klas / Kanaal</label>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">Kanaal</label>
           <select id="select-class" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-sm font-bold text-white focus:outline-none focus:border-amber-500">
             <option value="2101">2101</option>
             <option value="2102">2102</option>
@@ -81,7 +81,7 @@
       <div class="flex items-center gap-3">
         <div class="h-3 w-3 rounded-full bg-emerald-500 animate-pulse"></div>
         <div>
-          <h2 class="font-black text-sm" id="topbar-info">KLAS: 2101</h2>
+          <h2 class="font-black text-sm" id="topbar-info">kanaal: 2101</h2>
           <p class="text-[11px] text-slate-400" id="topbar-role">Rol: TAAKDRAGER • Student</p>
         </div>
       </div>
@@ -110,7 +110,7 @@
           <div id="oc-target-wrap" class="hidden space-y-1">
             <label class="block text-[10px] font-bold uppercase tracking-wider text-amber-400">Zend naar (OC)</label>
             <select id="select-oc-target" class="w-full bg-slate-900 border border-amber-700/60 rounded-lg p-2 text-xs font-bold text-white focus:outline-none focus:border-amber-500">
-              <option value="ALLE">📢 ALLE KLASSEN (broadcast)</option>
+              <option value="ALLE">📢 ALLE kanaalSEN (broadcast)</option>
               <option value="2101">2101</option>
               <option value="2102">2102</option>
               <option value="2103">2103</option>
@@ -193,7 +193,7 @@
 
     function channelLabel(ch) {
       if (!ch) return '?';
-      if (ch === OC_CHANNEL || ch === 'ALLE') return 'ALLE KLASSEN';
+      if (ch === OC_CHANNEL || ch === 'ALLE') return 'ALLE kanaalSEN';
       return ch;
     }
 
@@ -227,7 +227,7 @@
       // Audio ontgrendelen op user-gesture
       getAudioContext();
 
-      document.getElementById('topbar-info').textContent = `KLAS: ${currentClass}`;
+      document.getElementById('topbar-info').textContent = `kanaal: ${currentClass}`;
       document.getElementById('topbar-role').textContent = `Rol: ${currentRole} • ${currentName}`;
 
       updateRoleUI();
@@ -473,7 +473,7 @@
       });
     }
 
-    /* Audio-queue: voorkomt overlappende berichten (zeker bij OC met 12 klassen) */
+    /* Audio-queue: voorkomt overlappende berichten (zeker bij OC met 12 kanaalsen) */
     function queueIncoming(data, channel) {
       rxQueue.push({ data, channel });
       drainRxQueue();
